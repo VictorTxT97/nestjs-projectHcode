@@ -13,6 +13,7 @@ model users {
   email     String   @db.VarChar(127)
   password  String   @db.VarChar(127)
   birthAt   DateTime @db.Date
+  issuer   String?  // Campo opcional para armazenar o 'iss'
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

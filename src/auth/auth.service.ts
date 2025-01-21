@@ -12,23 +12,38 @@ constructor(private readonly jwtService: JwtService,
     private readonly userService: UserService
 ) {}
 
-async generateToken(users: users) {
-    return this.jwtService.sign({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        
-    }, {
-        expiresIn: "7 days",
-        subject: String(users.id),
-        issuer: 'login ',
-        audience:'users'
+async generateToken(user: any) {
+    const payload = {
+      sub: user.id, // Identificador do usuário
+      email: user.email,
+      name: user.name,
+    };
+  
+    return this.jwtService.sign(payload, {
+      issuer: 'login', // Defina 'issuer' como 'login'
+      audience: 'users', // Público-alvo (opcional)
+      expiresIn: '7d', // Validade do token
     });
-}
+  }
+  
 
-async checkToken(token: string) {
-    //return this.jwtService.verify(token);
-}
+  checkToken(token: string) {
+    try {
+      return this.jwtService.verify(token, {
+        issuer: 'login', // Deve coincidir com o valor usado na geração
+      });
+    } catch (e) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
+  isValidToken(token: string) {
+    try{
+        this.checkToken(token);
+        return true;
+    }catch(e){
+        return false;
+    }
+  }
 
 async login(email: string, password: string) {
     const users = await this.prisma.users.findFirst({
