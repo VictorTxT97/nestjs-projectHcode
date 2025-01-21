@@ -2,10 +2,14 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { PrismaService } from "../prisma/prisma.service";
 import { UpdatePatchUserDTO } from './dto/update-patch-user.dto';
-
+import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    
+  ) {}
 
   async create({ email, name, password, birthAt }: CreateUserDTO) {
     // Validação simples para garantir que birthAt é uma string válida
