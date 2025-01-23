@@ -52,11 +52,13 @@ export class UserService {
         email: data.email,
         password: data.password,
         birthAt: data.birthAt ? new Date(data.birthAt) : undefined,
+        role: data.role, // Adicionado o campo role
       },
     });
   }
 
-  async updatePartial(id: number, { email, name, password, birthAt }: UpdatePatchUserDTO) {
+
+  async updatePartial(id: number, { email, name, password, birthAt, role }: UpdatePatchUserDTO) {
     return this.prisma.users.update({
       where: {
         id: Number(id),
@@ -66,9 +68,11 @@ export class UserService {
         ...(name && { name }),
         ...(password && { password }),
         ...(birthAt && { birthAt: new Date(birthAt) }),
+        ...(role && { role }), // Adicionado o campo role
       },
     });
   }
+
   async delete(id: number) {
     return this.prisma.users.delete({
       where: {

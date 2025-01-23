@@ -1,18 +1,17 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { AuthService } from 'src/auth/auth.service';
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { AuthGuard as NestAuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
-    constructor(private readonly authService: AuthService) {}
+export class AuthGuard extends NestAuthGuard('jwt') {
+    handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
+        if (err || !user) {
+            throw new UnauthorizedException('Unauthorized access: Invalid token or user not found');
+        }
 
-    async canActivate(context: ExecutionContext): Promise<boolean> { // Alterado para async
-        const { authorization } = context.switchToHttp().getRequest().headers;
+        // Popula o usuário no request
+        const request = context.switchToHttp().getRequest();
+        request.user = user;
 
-        console.log(authorization);
-
-        // Valida o token de forma assíncrona
-        const isTokenValid = await this.authService.isValidToken(authorization);
-
-        return isTokenValid; // Retorna o resultado da validação
+        return user;
     }
 }
