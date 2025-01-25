@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport'; // Importa o PassportModule
 import { AuthController } from './auth.controller';
@@ -14,7 +14,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
             secret: 'M7LjCDQwUD67QPiw62yN9RVt', // Chave secreta usada para assinar os tokens
             signOptions: { expiresIn: '7d' }, // Validade do token
         }),
-        UserModule,
+        forwardRef(() => UserModule),
         PrismaModule,
     ],
     controllers: [AuthController],

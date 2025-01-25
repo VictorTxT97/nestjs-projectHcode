@@ -1,32 +1,33 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from 'src/decorators/roles.decorator';
-import { Role } from 'src/enums/role.enums';
+import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-    constructor(private readonly reflector: Reflector) {}
+  constructor(private readonly reflector: Reflector) {}
 
-    canActivate(context: ExecutionContext): boolean {
-        const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
-            context.getHandler(),
-            context.getClass(),
-        ]);
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.get<number[]>('roles', context.getHandler());
 
-        if (!requiredRoles) {
-            return true;
-        }
-
-        const request = context.switchToHttp().getRequest();
-        const user = request.user;
-
-        console.log('Usuário autenticado:', user); // Verifique o conteúdo de user
-        console.log('Roles exigidas:', requiredRoles);
-
-        if (!user) {
-            return false;
-        }
-
-        return requiredRoles.includes(user.role); // Certifique-se de usar `role`
+    if (!requiredRoles) {
+      return true; // Se nenhuma role foi exigida, permite o acesso
     }
+
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    console.log('Usuário no RolesGuard:', user); // Log para depuração
+    console.log('Roles exigidas:', requiredRoles);
+
+    if (!user || !user.role) {
+      throw new ForbiddenException('Acesso negado. Role do usuário não encontrada.');
+    }
+
+    const hasRole = requiredRoles.includes(user.role);
+
+    if (!hasRole) {
+      throw new ForbiddenException('Acesso negado. Role insuficiente.');
+    }
+
+    return hasRole;
+  }
 }

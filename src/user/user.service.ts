@@ -2,32 +2,33 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { PrismaService } from "../prisma/prisma.service";
 import { UpdatePatchUserDTO } from './dto/update-patch-user.dto';
-import { JwtService } from '@nestjs/jwt';
+import { Prisma, Role } from "@prisma/client";
+
 @Injectable()
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService,
-    
   ) {}
 
-  async create({ email, name, password, birthAt }: CreateUserDTO) {
-    // Validação simples para garantir que birthAt é uma string válida
+  async create({ email, name, password, birthAt, role }: CreateUserDTO) {
     if (!birthAt || isNaN(new Date(birthAt).getTime())) {
-      throw new Error('Invalid birthAt value. Ensure it is in ISO 8601 format.');
+        throw new Error('Invalid birthAt value. Ensure it is in ISO 8601 format.');
     }
-  
+
+    const mappedRole = this.mapRole(role);
+
     return this.prisma.users.create({
-      data: {
-        name,
-        email,
-        password,
-        birthAt: new Date(birthAt) // Garante que o valor seja convertido para Date
-      }
+        data: {
+            name,
+            email,
+            password,
+            birthAt: new Date(birthAt),
+            role: mappedRole,
+            issuer: 'login', // Define o valor padrão para o campo issuer
+        },
     });
-  }
-  
-  
+}
+
 
   async list() {
     return this.prisma.users.findMany();
@@ -43,6 +44,8 @@ export class UserService {
   }
 
   async update(id: number, data: CreateUserDTO) {
+    const mappedRole = this.mapRole(data.role);
+
     return this.prisma.users.update({
       where: {
         id: Number(id),
@@ -52,13 +55,14 @@ export class UserService {
         email: data.email,
         password: data.password,
         birthAt: data.birthAt ? new Date(data.birthAt) : undefined,
-        role: data.role, // Adicionado o campo role
+        role: mappedRole,
       },
     });
   }
 
-
   async updatePartial(id: number, { email, name, password, birthAt, role }: UpdatePatchUserDTO) {
+    const mappedRole = role ? this.mapRole(role) : undefined;
+
     return this.prisma.users.update({
       where: {
         id: Number(id),
@@ -68,7 +72,7 @@ export class UserService {
         ...(name && { name }),
         ...(password && { password }),
         ...(birthAt && { birthAt: new Date(birthAt) }),
-        ...(role && { role }), // Adicionado o campo role
+        ...(role && { role: mappedRole }),
       },
     });
   }
@@ -90,5 +94,11 @@ export class UserService {
       throw new NotFoundException(`O Usuario ${id} nao existe`);
     }
   }
+
+  private mapRole(role: number | Role): Role {
+    if (typeof role === 'number') {
+      return role === 2 ? Role.ADMIN : Role.USER;
+    }
+    return role;
+  }
 }
-  

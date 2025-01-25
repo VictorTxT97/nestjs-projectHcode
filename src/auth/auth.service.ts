@@ -14,11 +14,13 @@ export class AuthService {
 
   async generateToken(user: any) {
     const payload = {
-        sub: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role, // Inclui role no payload
+        sub: user.id,        // ID do usuário
+        email: user.email,   // Email do usuário
+        name: user.name,     // Nome do usuário
+        role: user.role,     // Inclui role no payload
     };
+
+    console.log('Payload do token JWT:', payload); // Log para depuração
 
     return this.jwtService.sign(payload, {
         issuer: 'login',
@@ -26,6 +28,7 @@ export class AuthService {
         expiresIn: '7d',
     });
 }
+
 
 
   checkToken(token: string) {
@@ -49,15 +52,26 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const user = await this.prisma.users.findFirst({
-      where: { email, password },
+        where: { email, password },
+        select: {                  // Inclui os campos necessários
+            id: true,
+            email: true,
+            name: true,
+            role: true,           // Inclui role no retorno
+        },
     });
 
+    console.log('Usuário retornado pelo banco:', user); // Log para depuração
+
     if (!user) {
-      throw new UnauthorizedException("Senha ou Email inválidos!");
+        throw new UnauthorizedException("Senha ou Email inválidos!");
     }
 
-    return this.generateToken(user);
-  }
+    return this.generateToken(user); // Gera o token com o campo role incluído
+}
+
+
+
 
   async forget(email: string) {
     const user = await this.prisma.users.findFirst({
