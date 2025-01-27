@@ -3,7 +3,7 @@ import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "src/prisma/prisma.service";
 import { AuthRegisterDTO } from "./dto/auth-register.dto";
 import { UserService } from "src/user/user.service";
-
+import * as bcrypt from 'bcrypt'
 @Injectable()
 export class AuthService {
   constructor(
@@ -52,24 +52,26 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const user = await this.prisma.users.findFirst({
-        where: { email, password },
+        where: { email },
         select: {                  // Inclui os campos necessários
             id: true,
             email: true,
             name: true,
             role: true,           // Inclui role no retorno
+            password: true,       // Inclui password no retorno
         },
     });
 
     console.log('Usuário retornado pelo banco:', user); // Log para depuração
 
     if (!user) {
+        throw new UnauthorizedException("Senha ou Email inválidos!");}
+      if (!await bcrypt.compare(password, user.password)) {
         throw new UnauthorizedException("Senha ou Email inválidos!");
-    }
-
+      }
     return this.generateToken(user); // Gera o token com o campo role incluído
-}
-
+  }
+    
 
 
 

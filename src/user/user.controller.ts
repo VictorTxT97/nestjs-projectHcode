@@ -13,6 +13,7 @@ import {
   BadRequestException,
   UseInterceptors,
   UseGuards,
+  
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDTO } from './dto/create-user.dto';
@@ -24,7 +25,7 @@ import { LogInterceptor } from 'src/interceptors/log.interceptor';
 import { RolesGuard } from 'src/guards/role.guard';
 import { AuthGuard } from 'src/guards/auth.guard';
 @Roles(Role.Admin)
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards( AuthGuard, RolesGuard)
 @UseInterceptors(LogInterceptor)
 @Controller('users')
 export class UserController {

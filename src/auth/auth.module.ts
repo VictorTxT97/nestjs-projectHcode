@@ -11,7 +11,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
     imports: [
         PassportModule, // Necessário para utilizar estratégias Passport
         JwtModule.register({
-            secret: 'M7LjCDQwUD67QPiw62yN9RVt', // Chave secreta usada para assinar os tokens
+            secret: process.env.JWT_SECRET_KEY, // Chave secreta usada para assinar os tokens
             signOptions: { expiresIn: '7d' }, // Validade do token
         }),
         forwardRef(() => UserModule),

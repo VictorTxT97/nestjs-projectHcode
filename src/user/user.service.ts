@@ -3,6 +3,7 @@ import { CreateUserDTO } from "./dto/create-user.dto";
 import { PrismaService } from "../prisma/prisma.service";
 import { UpdatePatchUserDTO } from './dto/update-patch-user.dto';
 import { Prisma, Role } from "@prisma/client";
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class UserService {
@@ -11,6 +12,9 @@ export class UserService {
   ) {}
 
   async create({ email, name, password, birthAt, role }: CreateUserDTO) {
+    const salt = await bcrypt.genSalt();
+    password = await bcrypt.hash(password, salt);
+    
     if (!birthAt || isNaN(new Date(birthAt).getTime())) {
         throw new Error('Invalid birthAt value. Ensure it is in ISO 8601 format.');
     }
@@ -44,6 +48,8 @@ export class UserService {
   }
 
   async update(id: number, data: CreateUserDTO) {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(data.password, salt);
     const mappedRole = this.mapRole(data.role);
 
     return this.prisma.users.update({
@@ -53,7 +59,7 @@ export class UserService {
       data: {
         name: data.name,
         email: data.email,
-        password: data.password,
+        password: hashedPassword,
         birthAt: data.birthAt ? new Date(data.birthAt) : undefined,
         role: mappedRole,
       },
@@ -62,7 +68,8 @@ export class UserService {
 
   async updatePartial(id: number, { email, name, password, birthAt, role }: UpdatePatchUserDTO) {
     const mappedRole = role ? this.mapRole(role) : undefined;
-
+    const salt = await bcrypt.genSalt();
+    password = await bcrypt.hash(password, salt);
     return this.prisma.users.update({
       where: {
         id: Number(id),
