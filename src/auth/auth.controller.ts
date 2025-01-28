@@ -7,6 +7,9 @@ import {
     UseInterceptors,
     UploadedFile,
     BadRequestException,
+    UploadedFiles,
+    ParseFilePipe,
+    FileTypeValidator
   } from '@nestjs/common';
   import { AuthLoginDto } from './dto/auth-login.dto';
   import { AuthRegisterDTO } from './dto/auth-register.dto';
@@ -16,7 +19,7 @@ import {
   import { UserService } from 'src/user/user.service';
   import { AuthGuard } from 'src/guards/auth.guard';
   import { User } from '../decorators/user.decorator';
-  import { FileInterceptor } from '@nestjs/platform-express';
+  import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
   import { join } from 'path';
   import { Express } from 'express'; // Tipo correto para arquivos enviados
   import { FileService } from 'src/file/file.service';
@@ -83,6 +86,39 @@ import {
       // Salva o arquivo
       return await this.fileService.upload(file, filePath);
     }
+    @Post('files')
+@UseGuards(AuthGuard)
+@UseInterceptors(FilesInterceptor('file'))
+async uploadFiles(
+    @UploadedFiles(
+        new ParseFilePipe({
+            validators: [new FileTypeValidator({ fileType: 'image/png' })],
+        }),
+    )
+    files: Express.Multer.File[],
+) {
+    if (!files || files.length === 0) {
+        throw new BadRequestException('Nenhum arquivo encontrado');
+    }
+
+    try {
+        for (const file of files) {
+            const filePath = join(__dirname, '../../storage', file.originalname);
+            await this.fileService.upload(file, filePath);
+        }
+        return { message: 'Arquivos enviados com sucesso', files: files.map(file => file.originalname) };
+    } catch (e) {
+        throw new BadRequestException(e.message);
+    }
+}
+@Post('reset')
+async resetPassword(
+  @Body('password') password: string,
+  @Body('token') token: string,
+) {
+  return this.authService.reset(password, token);
+}
+
   
   }
   

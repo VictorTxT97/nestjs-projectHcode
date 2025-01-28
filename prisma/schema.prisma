@@ -13,14 +13,16 @@ enum Role {
 }
 
 model users {
-  id        Int      @id @default(autoincrement()) @db.UnsignedInt
-  name      String   @db.VarChar(63)
-  email     String   @unique @db.VarChar(127)  // Garante que o email seja único
-  password  String   @db.VarChar(127)
-  birthAt   DateTime @db.Date
-  role      Role     @default(USER)           // Campo role usando enum
-  issuer    String?                          // Campo opcional para armazenar o issuer
-  createdAt DateTime @default(now())          // Define a data de criação automaticamente
-  updatedAt DateTime @updatedAt               // Atualiza automaticamente na modificação
+  id               Int      @id @default(autoincrement()) @db.UnsignedInt
+  name             String   @db.VarChar(63)
+  email            String   @unique @db.VarChar(127)
+  password         String   @db.VarChar(127)
+  passwordModified DateTime @default(now())              // Data da última modificação da senha
+  birthAt          DateTime @db.Date
+  role             Role     @default(USER)
+  issuer           String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
+
 
