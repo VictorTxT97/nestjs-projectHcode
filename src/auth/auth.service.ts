@@ -1,155 +1,135 @@
-import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { PrismaService } from "src/prisma/prisma.service";
-import { AuthRegisterDTO } from "./dto/auth-register.dto";
-import { UserService } from "src/user/user.service";
-import * as bcrypt from 'bcrypt'
+import { Repository } from "typeorm";
+import * as bcrypt from 'bcrypt';
+import { InjectRepository } from "@nestjs/typeorm";
 import { MailerService } from "@nestjs-modules/mailer";
+
+import { AuthRegisterDTO } from "./dto/auth-register.dto";
+import { AuthLoginDto } from "./dto/auth-login.dto";
+import { AuthForgetDto } from "./dto/auth-forget.dto";
+import { UserEntity } from "src/user/entity/user.entity";
+import { UserService } from "src/user/user.service";
+
 @Injectable()
 export class AuthService {
-  constructor(
-    private readonly jwtService: JwtService,
-    private readonly prisma: PrismaService,
-    private readonly userService: UserService,
-    private readonly mailer: MailerService
-  ) {}
+    constructor(
+        private readonly jwtService: JwtService,
+        private readonly userService: UserService,
+        private readonly mailer: MailerService,
 
-  async generateToken(user: any) {
-    const payload = {
-        sub: user.id,        // ID do usuário
-        email: user.email,   // Email do usuário
-        name: user.name,     // Nome do usuário
-        role: user.role,     // Inclui role no payload
-    };
+        @InjectRepository(UserEntity)
+        private usersRepository: Repository<UserEntity>,
+    ) {}
 
-    console.log('Payload do token JWT:', payload); // Log para depuração
+    /**
+     * Gera um token JWT para o usuário autenticado
+     */
+    async generateToken(user: UserEntity) {
+        const payload = {
+            sub: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+        };
 
-    return this.jwtService.sign(payload, {
-        issuer: 'login',
-        audience: 'users',
-        expiresIn: '7d',
-    });
-}
-
-
-
-  checkToken(token: string) {
-    try {
-      return this.jwtService.verify(token, {
-        issuer: 'login', // Deve coincidir com o valor usado na geração
-      });
-    } catch (e) {
-      throw new UnauthorizedException('Invalid token');
+        return this.jwtService.sign(payload, {
+            issuer: 'login',
+            audience: 'users',
+            expiresIn: '7d',
+        });
     }
-  }
 
-  isValidToken(token: string) {
-    try {
-      this.checkToken(token);
-      return true;
-    } catch (e) {
-      return false;
+    /**
+     * Realiza login do usuário e retorna um token JWT
+     */
+    async login(email: string, password: string): Promise<{ access_token: string }> {
+        const user = await this.usersRepository.findOne({ where: { email } });
+
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            throw new UnauthorizedException('Credenciais inválidas');
+        }
+
+        const payload = { sub: user.id, email: user.email, role: user.role };
+        return { access_token: this.jwtService.sign(payload) };
     }
-  }
 
-  async login(email: string, password: string) {
-    const user = await this.prisma.users.findFirst({
-        where: { email },
-        select: {                  // Inclui os campos necessários
-            id: true,
-            email: true,
-            name: true,
-            role: true,           // Inclui role no retorno
-            password: true,       // Inclui password no retorno
-        },
-    });
+    /**
+     * Registra um novo usuário
+     */
+    async register(body: AuthRegisterDTO): Promise<UserEntity> {
+        const userExists = await this.usersRepository.findOne({ where: { email: body.email } });
 
-    console.log('Usuário retornado pelo banco:', user); // Log para depuração
+        if (userExists) {
+            throw new BadRequestException('E-mail já cadastrado');
+        }
+
+        const hashedPassword = await bcrypt.hash(body.password, 10);
+        const newUser = this.usersRepository.create({ ...body, password: hashedPassword });
+
+        return await this.usersRepository.save(newUser);
+    }
+
+    /**
+     * Envia um e-mail para redefinição de senha
+     */
+    
+  async forget(email: string): Promise<{ message: string }> {
+    const user = await this.usersRepository.findOne({ where: { email } });
 
     if (!user) {
-        throw new UnauthorizedException("Senha ou Email inválidos!");}
-      if (!await bcrypt.compare(password, user.password)) {
-        throw new UnauthorizedException("Senha ou Email inválidos!");
-      }
-    return this.generateToken(user); // Gera o token com o campo role incluído
-  }
-    
-
-
-
-  async forget(email: string) {
-    const user = await this.prisma.users.findFirst({
-      where: { email },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException("Email incorreto");
+      throw new NotFoundException('E-mail não encontrado');
     }
-    const token = this.jwtService.sign(
-      { id: user.id },
-      {
-        expiresIn: '7 days',
-        subject: String(user.id),
-        issuer: 'login', // Valor inline
-        audience: 'users', // Valor inline
-      }
-    );
-    
+
+    // Gera um token de redefinição que vale por 1 hora
+    const resetToken = this.jwtService.sign({ sub: user.id }, { expiresIn: '1h' });
+
     await this.mailer.sendMail({
-      subject: 'Reset your password',
-      to: 'victor@nestjs.com',
-      template: 'forget',
-      context:{
-        name: user.name,
-        token
-      }
+      to: email,
+      subject: 'Recuperação de Senha',
+      // Aponta para o arquivo Pug (sem .pug) na pasta "src/templates"
+      template: './forget',
+      // As variáveis que o template usará
+      context: {
+        token: resetToken,
+        userName: user.name, 
+        // qualquer outro campo que queira exibir no template
+      },
     });
-    return true;
+
+    return { message: 'E-mail de recuperação enviado!' };
   }
 
-  async reset(password: string, token: string) {
-    try {
-      // Verificar e decodificar o token
-      const payload = this.jwtService.verify(token, {
-        issuer: 'login', // Garantir que o issuer seja 'login'
-      });
-  
-      const id = parseInt(payload.sub, 10);
-  
-      // Verificar se o usuário existe
-      const user = await this.prisma.users.findUnique({
-        where: { id },
-      });
-  
-      if (!user) {
-        throw new BadRequestException('Usuário não encontrado.');
-      }
-  
-      // Atualizar a senha e a data de modificação no banco de dados
-      const updatedUser = await this.prisma.users.update({
-        where: { id },
-        data: {
-          password,
-          passwordModified: new Date(), // Atualiza o campo com a data/hora atual
-        },
-      });
-  
-      // Retornar mensagem de sucesso e um novo token
-      return {
-        message: 'Senha atualizada com sucesso!',
-        token: this.generateToken(updatedUser),
-      };
-    } catch (e) {
-      // Retornar erro se o token for inválido ou expirado
-      throw new BadRequestException(e.message || 'Token inválido ou expirado.');
+
+    /**
+     * Reseta a senha do usuário utilizando um token JWT
+     */
+    async reset(password: string, token: string) {
+        try {
+            const payload = this.jwtService.verify(token, { issuer: 'login' });
+            const id = parseInt(payload.sub, 10);
+
+            const user = await this.usersRepository.findOne({ where: { id } });
+
+            if (!user) {
+                throw new BadRequestException('Usuário não encontrado.');
+            }
+
+            const salt = await bcrypt.genSalt();
+            const hashedPassword = await bcrypt.hash(password, salt);
+
+            await this.usersRepository.update(id, { password: hashedPassword });
+
+            return {
+                message: 'Senha atualizada com sucesso!',
+                token: this.generateToken(user),
+            };
+        } catch (e) {
+            if (e instanceof Error) {
+                throw new BadRequestException(e.message || 'Token inválido ou expirado.');
+            } else {
+                throw new BadRequestException('Erro inesperado');
+            }
+        }
     }
-  }
-  
-  
-  
-
-  async register(data: AuthRegisterDTO) {
-    const user = await this.userService.create(data);
-    return this.generateToken(user);
-  }
 }

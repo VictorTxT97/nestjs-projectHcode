@@ -24,7 +24,7 @@ import { Role } from 'src/enums/role.enums';
 import { LogInterceptor } from 'src/interceptors/log.interceptor';
 import { RolesGuard } from 'src/guards/role.guard';
 import { AuthGuard } from 'src/guards/auth.guard';
-@Roles(Role.Admin)
+@Roles(Role.ADMIN)
 @UseGuards( AuthGuard, RolesGuard)
 @UseInterceptors(LogInterceptor)
 @Controller('users')
@@ -41,7 +41,8 @@ export class UserController {
       const user = await this.userService.create(body);
       return user;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException((error as Error).message);
+
     }
   }
 
@@ -74,7 +75,8 @@ export class UserController {
       }
       return updatedUser;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException((error as Error).message);
+
     }
   }
 
@@ -89,7 +91,8 @@ export class UserController {
       }
       return updatedUser;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException((error as Error).message);
+
     }
   }
 

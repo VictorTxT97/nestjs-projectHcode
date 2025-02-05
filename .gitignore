@@ -1,16 +1,18 @@
-# compiled output
-/dist
-/node_modules
-/build
+# Ignora a pasta dist no git (não envia arquivos compilados para o repositório)
+dist/
 
-# Logs
-logs
+# Permite arquivos dentro de dist
+!dist/
+
+# Outras pastas e arquivos que devem ser ignorados
+/logs
 *.log
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+
 
 # OS
 .DS_Store

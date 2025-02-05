@@ -1,30 +1,38 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport'; // Importa o PassportModule
+import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy'; // Importa a estratégia JWT
+import { JwtStrategy } from './jwt.strategy';
 import { UserModule } from 'src/user/user.module';
-import { PrismaModule } from 'src/prisma/prisma.module';
-
 import { FileModule } from 'src/file/file.module';
+import { UserEntity } from 'src/user/entity/user.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
-    imports: [
-        PassportModule, // Necessário para utilizar estratégias Passport
-        JwtModule.register({
-            secret: process.env.JWT_SECRET_KEY, // Chave secreta usada para assinar os tokens
-            signOptions: { expiresIn: '7d' }, // Validade do token
-        }),
-        forwardRef(() => UserModule),
-        PrismaModule,
-        FileModule
-    ],
-    controllers: [AuthController],
-    providers: [
-        AuthService, // Serviço de autenticação
-        JwtStrategy, // Estratégia JWT para validação de tokens
-    ],
-    exports: [AuthService], // Exporta AuthService para outros módulos
+  imports: [
+    PassportModule,
+
+    // Registramos nosso JWT de forma assíncrona para poder ler do ConfigService
+    JwtModule.registerAsync({
+      // Note que não precisamos chamar ConfigModule.forRoot() aqui
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET_KEY'),
+        signOptions: { expiresIn: '7d' },
+      }),
+      inject: [ConfigService],
+    }),
+
+    forwardRef(() => UserModule),
+    FileModule,
+    TypeOrmModule.forFeature([UserEntity]),
+  ],
+  controllers: [AuthController],
+  providers: [
+    AuthService,
+    JwtStrategy,
+  ],
+  exports: [AuthService],
 })
 export class AuthModule {}

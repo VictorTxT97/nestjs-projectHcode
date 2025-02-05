@@ -1,21 +1,28 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
-    "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "module": "CommonJS", // Módulo usado pelo Node.js e compatível com TypeORM
+    "target": "ES2020", // Suporte moderno ao JavaScript
+    "lib": ["ES2020"], // Bibliotecas padrão para o TypeScript
+    "strict": true, // Verificações rigorosas de tipo
+    "esModuleInterop": true, // Permite compatibilidade com CommonJS
+    "skipLibCheck": true, // Ignora checagem de tipos de bibliotecas externas
+    "forceConsistentCasingInFileNames": true, // Verificação de maiúsculas/minúsculas
+    "rootDir": "./src", // Diretório raiz do código-fonte
+    "outDir": "./dist", // Pasta de saída para os arquivos compilados
+    "resolveJsonModule": true, // Permite importação de arquivos JSON
+    "experimentalDecorators": true, // Necessário para NestJS e TypeORM
+    "emitDecoratorMetadata": true, // Necessário para TypeORM e decoradores
+    "incremental": true, // Habilita compilação incremental
+    "moduleResolution": "node", // Resolução de módulos do Node.js
+    "strictPropertyInitialization": false, // Evita erro de inicialização de propriedades
+    "allowSyntheticDefaultImports": true, // Permite imports padrão
+    "typeRoots": ["./node_modules/@types"], // Tipos personalizados
+    "baseUrl": "./", // Resolução de caminhos relativos
+    "paths": {
+      "@/*": ["src/*"] // Permite o uso de @/ para importações
+    }
+  },
+  "include": ["src/**/*.ts"], // Inclui todos os arquivos TypeScript na pasta src
+  "exclude": ["node_modules", "dist"] // Exclui node_modules e dist da compilação
 }
+

@@ -1,19 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, ExtractJwt } from 'passport-jwt';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { UserEntity } from 'src/user/entity/user.entity';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor() {
+    constructor(
+        @InjectRepository(UserEntity)
+        private readonly usersRepository: Repository<UserEntity>,
+    ) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            ignoreExpiration: false, // Respeita a validade do token
-            secretOrKey: 'M7LjCDQwUD67QPiw62yN9RVt', // Chave secreta do JwtModule
+            ignoreExpiration: false,
+            secretOrKey: process.env.JWT_SECRET_KEY,
         });
     }
 
-    async validate(payload: any) {
-        // Retorna o payload do token como o usuário autenticado
-        return { userId: payload.sub, email: payload.email, name: payload.name, role: payload.role,};
+    /**
+     * Busca o usuário no banco pelo ID do payload JWT e retorna um UserEntity completo.
+     */
+    async validate(payload: any): Promise<UserEntity> {
+        const user = await this.usersRepository.findOne({ where: { id: payload.sub } });
+
+        if (!user) {
+            throw new Error('Usuário não encontrado');
+        }
+
+        return user;
     }
 }
+
+

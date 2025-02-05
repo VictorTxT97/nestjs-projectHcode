@@ -3,15 +3,13 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "assets": [{
-      "include": "template/**/*",
-      "outDir": "dist"
-      }]
-
-
-
-    
-    
-    
+    "tsConfigPath": "./tsconfig.json",  
+    "assets": [                        
+      {
+        "include": "template/**/*",
+        "outDir": "dist"               
+      }
+    ],
+    "watchAssets": true
   }
 }

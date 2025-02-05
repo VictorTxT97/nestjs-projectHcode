@@ -7,26 +7,31 @@ import { AuthModule } from './auth/auth.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { join } from 'path';
-
+import { UserEntity } from './user/entity/user.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
-    // Importa os módulos do projeto
-    ConfigModule.forRoot(),
+    // Carrega o .env e disponibiliza globalmente
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+
     UserModule,
     AuthModule,
     MailerModule.forRoot({
       transport: {
         host: 'smtp.ethereal.email',
         port: 587,
-        secure: false, // Ethereal não usa SSL
+        secure: false,
         auth: {
-          user: 'margret.lind81@ethereal.email',
-          pass: 'qXtAscGNqTcPmBykW5',
+          user: 'taylor.kunde@ethereal.email',
+          pass: 't1Hg8yc8hvQNppFj6U',
         },
       },
       defaults: {
-        from: '"No Reply" <no-reply@example.com>', // Substitua pelo nome de remetente desejado
+        from: '"No Reply" <no-reply@example.com>',
       },
       template: {
         dir: join(__dirname, '..', 'src', 'templates'),
@@ -37,14 +42,18 @@ import { join } from 'path';
       },
     }),
 
-  
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+      entities: [UserEntity],
+      synchronize: process.env.ENV === 'DEVELOPMENT',
+    }),
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-   
-  ],
+  providers: [AppService],
 })
 export class AppModule {}
-
-

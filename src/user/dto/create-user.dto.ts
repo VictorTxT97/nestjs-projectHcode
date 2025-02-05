@@ -18,7 +18,7 @@ export class CreateUserDTO {
     birthAt: string; // Valida se está no formato ISO 8601
     @IsOptional()
     @IsEnum(Role)
-    role: number; // Valida se é um dos valores do enum
+    role: Role; // Valida se é um dos valores do enum
 }
 
 
