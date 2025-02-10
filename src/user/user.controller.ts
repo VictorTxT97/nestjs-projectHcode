@@ -11,17 +11,29 @@ import {
   HttpStatus,
   NotFoundException,
   BadRequestException,
+  UseInterceptors,
+  UseGuards,
+  
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdatePatchUserDTO } from './dto/update-patch-user.dto';
 import { ParamId } from 'src/decorators/param-is.decorator';
-
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enums/role.enums';
+import { LogInterceptor } from 'src/interceptors/log.interceptor';
+import { RolesGuard } from 'src/guards/role.guard';
+import { AuthGuard } from 'src/guards/auth.guard';
+@Roles(Role.ADMIN)
+@UseGuards( AuthGuard, RolesGuard)
+@UseInterceptors(LogInterceptor)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // CREATE
+  
+  
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() body: CreateUserDTO) {
@@ -29,17 +41,20 @@ export class UserController {
       const user = await this.userService.create(body);
       return user;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException((error as Error).message);
+
     }
   }
 
   // LIST ALL
+  
   @Get()
   async list() {
     return await this.userService.list();
   }
 
   // SHOW (FIND BY ID)
+  
   @Get(':id')
   async show(@ParamId() id: number) {
     const user = await this.userService.show(id);
@@ -50,6 +65,7 @@ export class UserController {
   }
 
   // UPDATE (PUT)
+  
   @Put(':id')
   async update(@ParamId() id: number, @Body() body: CreateUserDTO) {
     try {
@@ -59,11 +75,13 @@ export class UserController {
       }
       return updatedUser;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException((error as Error).message);
+
     }
   }
 
   // PARTIAL UPDATE (PATCH)
+  
   @Patch(':id')
   async updatePartial(@ParamId() id: number, @Body() body: UpdatePatchUserDTO) {
     try {
@@ -73,11 +91,13 @@ export class UserController {
       }
       return updatedUser;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException((error as Error).message);
+
     }
   }
 
   // DELETE
+  
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@ParamId() id: number) {
