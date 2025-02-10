@@ -96,6 +96,7 @@ export class UserService {
   async delete(id: number) {
     const user = await this.show(id); // Verifica se o usuário existe antes de deletar
     return await this.usersRepository.remove(user); // Remove o usuário do banco e retorna
+    
   }
 
   // ✅ Verifica se um usuário existe no banco

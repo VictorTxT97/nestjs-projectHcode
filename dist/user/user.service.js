@@ -50,8 +50,9 @@ const common_1 = require("@nestjs/common"); // Importa os decorators e exceçõe
 const typeorm_1 = require("@nestjs/typeorm"); // Importa a função para injetar repositórios do TypeORM
 const typeorm_2 = require("typeorm"); // Importa a classe Repository do TypeORM para interagir com o banco
 const bcrypt = __importStar(require("bcrypt")); // Importa o bcrypt para criptografar senhas
-const role_enums_1 = require("../enums/role.enums"); // Importa o enum de roles (admin/user)
+// Importa o enum de roles (admin/user)
 const user_entity_1 = require("./entity/user.entity"); // Importa a entidade de usuário
+const role_enums_1 = require("../enums/role.enums");
 let UserService = class UserService {
     constructor(usersRepository) {
         this.usersRepository = usersRepository;

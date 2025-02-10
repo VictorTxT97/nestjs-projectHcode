@@ -9,7 +9,7 @@ export class UserEntity {
   @PrimaryGeneratedColumn({
     unsigned: true,
   })
-  id: number;
+  id?: number;
 
   @Column({ length: 63 })
   name: string;
@@ -27,13 +27,13 @@ export class UserEntity {
     type: "date",
     nullable: true, // Permite que o campo `birthAt` seja opcional
   })
-  birthAt: Date;
+  birthAt?: Date;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt?: Date;
 
   @Column({
     type: "enum",
