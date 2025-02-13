@@ -64,7 +64,7 @@ let UserService = class UserService {
         if (!birthAt || isNaN(new Date(birthAt).getTime())) { // Verifica se a data de nascimento é válida
             throw new Error('Invalid birthAt value. Ensure it is in ISO 8601 format.');
         }
-        const mappedRole = this.mapRole(role); // Converte o role para o formato correto
+        const mappedRole = this.mapRole(role ?? role_enums_1.Role.USER); // ✅ Garante um valor padrão se `role` for undefined
         // Cria um novo usuário com os dados fornecidos
         const newUser = this.usersRepository.create({
             email,
@@ -92,7 +92,7 @@ let UserService = class UserService {
         const user = await this.show(id); // Verifica se o usuário existe antes de atualizar
         const salt = await bcrypt.genSalt(); // Gera um novo salt para a senha
         const hashedPassword = await bcrypt.hash(data.password, salt); // Criptografa a nova senha
-        const mappedRole = this.mapRole(data.role); // Converte o role para o formato correto
+        const mappedRole = this.mapRole(data.role ?? role_enums_1.Role.USER); // ✅ Garante um valor padrão se `data.role` for undefined
         // Atualiza os dados do usuário com os novos valores
         Object.assign(user, {
             name: data.name,

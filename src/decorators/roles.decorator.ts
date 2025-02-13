@@ -1,5 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
-import { Role } from 'src/enums/role.enums';
+import { Role } from '../enums/role.enums';
+
 
 // Define a chave usada para armazenar roles na metadata
 export const ROLES_KEY = 'roles';

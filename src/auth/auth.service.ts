@@ -6,10 +6,8 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { MailerService } from "@nestjs-modules/mailer";
 
 import { AuthRegisterDTO } from "./dto/auth-register.dto";
-import { AuthLoginDto } from "./dto/auth-login.dto";
-import { AuthForgetDto } from "./dto/auth-forget.dto";
-import { UserEntity } from "src/user/entity/user.entity";
-import { UserService } from "src/user/user.service";
+import { UserService } from "../user/user.service";
+import { UserEntity } from "../user/entity/user.entity";
 
 @Injectable()
 export class AuthService {
@@ -25,19 +23,48 @@ export class AuthService {
     /**
      * Gera um token JWT para o usuário autenticado
      */
-    async generateToken(user: UserEntity) {
+    async generateToken(user: UserEntity): Promise<string> { // ✅ Agora garantimos que retorna uma string
         const payload = {
             sub: user.id,
             email: user.email,
             name: user.name,
             role: user.role,
         };
-
-        return this.jwtService.sign(payload, {
+    
+        return this.jwtService.sign(payload, { // ✅ Retornando explicitamente
             issuer: 'login',
             audience: 'users',
             expiresIn: '7d',
         });
+    }
+    
+
+    /**
+     * Verifica se um token JWT é válido e retorna os dados do usuário.
+     */
+    checkToken(token: string) {
+        try {
+            const data = this.jwtService.verify(token, {
+                issuer: 'login',
+                audience: 'users',
+            });
+
+            return data;
+        } catch (e) {
+            throw new BadRequestException(e);
+        }
+    }
+
+    /**
+     * Retorna um booleano indicando se um token JWT é válido.
+     */
+    isValidToken(token: string) {
+        try {
+            this.checkToken(token);
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 
     /**
@@ -59,47 +86,46 @@ export class AuthService {
      */
     async register(body: AuthRegisterDTO): Promise<UserEntity> {
         const userExists = await this.usersRepository.findOne({ where: { email: body.email } });
-
+    
+        console.log("🚀 Valor retornado por findOne no register:", userExists); // 🔥 Adicionado para depuração
+    
         if (userExists) {
             throw new BadRequestException('E-mail já cadastrado');
         }
-
+    
         const hashedPassword = await bcrypt.hash(body.password, 10);
         const newUser = this.usersRepository.create({ ...body, password: hashedPassword });
-
+    
         return await this.usersRepository.save(newUser);
     }
+    
 
     /**
      * Envia um e-mail para redefinição de senha
      */
-    
-  async forget(email: string): Promise<{ message: string }> {
-    const user = await this.usersRepository.findOne({ where: { email } });
+    async forget(email: string): Promise<{ message: string }> {
+        const user = await this.usersRepository.findOne({ where: { email } });
 
-    if (!user) {
-      throw new NotFoundException('E-mail não encontrado');
+        if (!user) {
+            throw new NotFoundException('E-mail não encontrado');
+        }
+
+        // Gera um token de redefinição que vale por 1 hora
+        const resetToken = this.jwtService.sign({ sub: user.id }, { expiresIn: '1h' });
+        
+
+        await this.mailer.sendMail({
+            to: email,
+            subject: 'Recuperação de Senha',
+            template: './forget',
+            context: {
+                token: resetToken,
+                userName: user.name,
+            },
+        });
+
+        return { message: 'E-mail de recuperação enviado!' };
     }
-
-    // Gera um token de redefinição que vale por 1 hora
-    const resetToken = this.jwtService.sign({ sub: user.id }, { expiresIn: '1h' });
-
-    await this.mailer.sendMail({
-      to: email,
-      subject: 'Recuperação de Senha',
-      // Aponta para o arquivo Pug (sem .pug) na pasta "src/templates"
-      template: './forget',
-      // As variáveis que o template usará
-      context: {
-        token: resetToken,
-        userName: user.name, 
-        // qualquer outro campo que queira exibir no template
-      },
-    });
-
-    return { message: 'E-mail de recuperação enviado!' };
-  }
-
 
     /**
      * Reseta a senha do usuário utilizando um token JWT

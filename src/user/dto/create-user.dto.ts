@@ -1,5 +1,6 @@
 import { IsString, IsEmail, IsStrongPassword, IsOptional, IsDateString, MinLength, IsEnum } from "class-validator";
-import { Role } from "src/enums/role.enums";
+import { Role } from "../../enums/role.enums";
+
 
 
 
@@ -15,10 +16,10 @@ export class CreateUserDTO {
     password: string;
     @IsOptional()
     @IsDateString()
-    birthAt: string; // Valida se está no formato ISO 8601
+    birthAt?: string; // Valida se está no formato ISO 8601
     @IsOptional()
     @IsEnum(Role)
-    role: Role; // Valida se é um dos valores do enum
+    role?: Role; // Valida se é um dos valores do enum
 }
 
 
