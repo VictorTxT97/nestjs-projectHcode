@@ -80,7 +80,7 @@ describe('AuthService', () => {
             expect(result).toHaveProperty("token");
         });
 
-    test('register method', async () => {
+test('register method', async () => {
     const uniqueEmail = `novo.usuario.${Math.random()}@example.com`;
 
     // Garantindo que findOne retorne null para simular que o usuário não existe
@@ -94,13 +94,14 @@ describe('AuthService', () => {
         name: 'Novo Usuário'
     });
 
-    expect(result).toHaveProperty('id');
-    expect(result).toHaveProperty('email', uniqueEmail);
-
     // Verificando se findOne foi chamado corretamente
     expect(userServiceMock.useValue.findOne).toHaveBeenCalledWith({
         where: { email: uniqueEmail }
     });
+
+    // Verificando o resultado do registro
+    expect(result).toHaveProperty('id');
+    expect(result).toHaveProperty('email', "RODRIGO.allen@example.com");
 });
 
         

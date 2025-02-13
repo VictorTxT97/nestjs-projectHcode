@@ -85,7 +85,7 @@ export class AuthService {
      * Registra um novo usuário
      */
     async register(body: AuthRegisterDTO): Promise<UserEntity> {
-        const userExists = await this.usersRepository.findOne({ where: { email: body.email } });
+        const userExists = await this.userService.findOne({ where: { email: body.email } });
     
         console.log("🚀 Valor retornado por findOne no register:", userExists); // 🔥 Adicionado para depuração
     
