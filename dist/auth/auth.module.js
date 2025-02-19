@@ -13,11 +13,11 @@ const passport_1 = require("@nestjs/passport");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const jwt_strategy_1 = require("./jwt.strategy");
+const typeorm_1 = require("@nestjs/typeorm");
+const config_1 = require("@nestjs/config");
 const user_module_1 = require("../user/user.module");
 const file_module_1 = require("../file/file.module");
 const user_entity_1 = require("../user/entity/user.entity");
-const typeorm_1 = require("@nestjs/typeorm");
-const config_1 = require("@nestjs/config");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;

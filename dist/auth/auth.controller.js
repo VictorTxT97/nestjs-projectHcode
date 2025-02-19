@@ -19,13 +19,13 @@ const auth_register_dto_1 = require("./dto/auth-register.dto");
 const auth_forget_dto_1 = require("./dto/auth-forget.dto");
 const auth_reset_dto_1 = require("./dto/auth-reset.dto");
 const auth_service_1 = require("./auth.service");
-const user_service_1 = require("../user/user.service");
-const auth_guard_1 = require("../guards/auth.guard");
 const user_decorator_1 = require("../decorators/user.decorator");
 const platform_express_1 = require("@nestjs/platform-express");
 const path_1 = require("path");
+const user_service_1 = require("../user/user.service");
 const file_service_1 = require("../file/file.service");
 const user_entity_1 = require("../user/entity/user.entity");
+const auth_guard_1 = require("../guards/auth.guard");
 let AuthController = class AuthController {
     constructor(userService, authService, fileService) {
         this.userService = userService;
@@ -44,16 +44,25 @@ let AuthController = class AuthController {
     async reset(body) {
         return this.authService.reset(body.password, body.token);
     }
-    async me(user, field) {
+    async me(user, req, field) {
+        const tokenPayload = req.user; // Pegamos o tokenPayload diretamente
         if (field) {
             if (user[field]) {
-                return { [field]: user[field] };
+                return {
+                    field: { [field]: user[field] },
+                    tokenPayload,
+                    request: { url: req.url, method: req.method }
+                };
             }
             else {
-                return { error: `Propriedade '${field}' não encontrada no usuário` };
+                return {
+                    error: `Propriedade '${field}' não encontrada no usuário`,
+                    tokenPayload,
+                    request: { url: req.url, method: req.method }
+                };
             }
         }
-        return { user };
+        return { user, tokenPayload, request: { url: req.url, method: req.method } };
     }
     async uploadPhoto(file) {
         if (!file) {
@@ -107,9 +116,10 @@ __decorate([
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
     (0, common_1.Post)('me'),
     __param(0, (0, user_decorator_1.User)()),
-    __param(1, (0, common_1.Query)('field')),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Query)('field')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_entity_1.UserEntity, String]),
+    __metadata("design:paramtypes", [user_entity_1.UserEntity, Object, String]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "me", null);
 __decorate([

@@ -7,9 +7,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
-  UploadedFiles,
-  ParseFilePipe,
-  FileTypeValidator
+  Req
 } from '@nestjs/common';
 
 import { AuthLoginDto } from './dto/auth-login.dto';
@@ -17,14 +15,16 @@ import { AuthRegisterDTO } from './dto/auth-register.dto';
 import { AuthForgetDto } from './dto/auth-forget.dto';
 import { AuthResetDto } from './dto/auth-reset.dto';
 import { AuthService } from './auth.service';
-import { UserService } from 'src/user/user.service';
-import { AuthGuard } from 'src/guards/auth.guard';
+
 import { User } from '../decorators/user.decorator';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { join } from 'path';
 import { Express } from 'express';
-import { FileService } from 'src/file/file.service';
-import { UserEntity } from 'src/user/entity/user.entity';
+import { UserService } from '../user/user.service';
+import { FileService } from '../file/file.service';
+import { UserEntity } from '../user/entity/user.entity';
+import { AuthGuard } from '../guards/auth.guard';
+
 
 @Controller('auth')
 export class AuthController {
@@ -56,15 +56,30 @@ export class AuthController {
 
   @UseGuards(AuthGuard)
   @Post('me')
-  async me(@User() user: UserEntity, @Query('field') field?: string) {
+  async me(
+      @User() user: UserEntity, 
+      @Req() req: any, // Apenas tipamos como `any` para evitar erro de tipagem
+      @Query('field') field?: string
+  ) {
+      const tokenPayload = req.user; // Pegamos o tokenPayload diretamente
+  
       if (field) {
           if (user[field as keyof UserEntity]) {
-              return { [field]: user[field as keyof UserEntity] };
+              return { 
+                  field: { [field]: user[field as keyof UserEntity] }, 
+                  tokenPayload,
+                  request: { url: req.url, method: req.method } 
+              };
           } else {
-              return { error: `Propriedade '${field}' não encontrada no usuário` };
+              return { 
+                  error: `Propriedade '${field}' não encontrada no usuário`, 
+                  tokenPayload,
+                  request: { url: req.url, method: req.method } 
+              };
           }
       }
-      return { user };
+  
+      return { user, tokenPayload, request: { url: req.url, method: req.method } };
   }
 
   @Post('photo')

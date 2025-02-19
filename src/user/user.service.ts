@@ -10,6 +10,7 @@ import { Role } from "../enums/role.enums";
 
 @Injectable() // Indica que esta classe pode ser injetada em outros serviços do NestJS
 export class UserService {
+  findOne: jest.Mock<any, any, any>;
   constructor(
     @InjectRepository(UserEntity) // Injeta o repositório do TypeORM para a entidade UserEntity
     private usersRepository: Repository<UserEntity>, // Define a propriedade que interage com o banco
@@ -24,7 +25,8 @@ export class UserService {
       throw new Error('Invalid birthAt value. Ensure it is in ISO 8601 format.');
     }
 
-    const mappedRole = this.mapRole(role); // Converte o role para o formato correto
+    const mappedRole = this.mapRole(role ?? Role.USER); // ✅ Garante um valor padrão se `role` for undefined
+ 
 
     // Cria um novo usuário com os dados fornecidos
     const newUser = this.usersRepository.create({
@@ -58,7 +60,8 @@ export class UserService {
 
     const salt = await bcrypt.genSalt(); // Gera um novo salt para a senha
     const hashedPassword = await bcrypt.hash(data.password, salt); // Criptografa a nova senha
-    const mappedRole = this.mapRole(data.role); // Converte o role para o formato correto
+    const mappedRole = this.mapRole(data.role ?? Role.USER); // ✅ Garante um valor padrão se `data.role` for undefined
+
 
     // Atualiza os dados do usuário com os novos valores
     Object.assign(user, {

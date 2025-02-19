@@ -9,11 +9,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.FileService = void 0;
 const common_1 = require("@nestjs/common");
 const promises_1 = require("fs/promises");
+const path_1 = require("path");
 let FileService = class FileService {
-    async upload(file, path) {
-        // Salva o arquivo diretamente, sem recriar o diretório
+    getDestinationPath() {
+        return (0, path_1.join)(__dirname, '../../storage', 'photos');
+    }
+    async upload(file, filename) {
+        const path = (0, path_1.join)(this.getDestinationPath(), filename);
         await (0, promises_1.writeFile)(path, file.buffer);
-        return { message: 'Upload concluído', path };
+        return path;
     }
 };
 exports.FileService = FileService;

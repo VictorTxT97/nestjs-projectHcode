@@ -52,8 +52,8 @@ const typeorm_1 = require("typeorm");
 const bcrypt = __importStar(require("bcrypt"));
 const typeorm_2 = require("@nestjs/typeorm");
 const mailer_1 = require("@nestjs-modules/mailer");
-const user_entity_1 = require("../user/entity/user.entity");
 const user_service_1 = require("../user/user.service");
+const user_entity_1 = require("../user/entity/user.entity");
 let AuthService = class AuthService {
     constructor(jwtService, userService, mailer, usersRepository) {
         this.jwtService = jwtService;
@@ -78,6 +78,33 @@ let AuthService = class AuthService {
         });
     }
     /**
+     * Verifica se um token JWT é válido e retorna os dados do usuário.
+     */
+    checkToken(token) {
+        try {
+            const data = this.jwtService.verify(token, {
+                issuer: 'login',
+                audience: 'users',
+            });
+            return data;
+        }
+        catch (e) {
+            throw new common_1.BadRequestException(e);
+        }
+    }
+    /**
+     * Retorna um booleano indicando se um token JWT é válido.
+     */
+    isValidToken(token) {
+        try {
+            this.checkToken(token);
+            return true;
+        }
+        catch (e) {
+            return false;
+        }
+    }
+    /**
      * Realiza login do usuário e retorna um token JWT
      */
     async login(email, password) {
@@ -92,7 +119,8 @@ let AuthService = class AuthService {
      * Registra um novo usuário
      */
     async register(body) {
-        const userExists = await this.usersRepository.findOne({ where: { email: body.email } });
+        const userExists = await this.userService.findOne({ where: { email: body.email } });
+        console.log("🚀 Valor retornado por findOne no register:", userExists); // 🔥 Adicionado para depuração
         if (userExists) {
             throw new common_1.BadRequestException('E-mail já cadastrado');
         }
@@ -113,13 +141,10 @@ let AuthService = class AuthService {
         await this.mailer.sendMail({
             to: email,
             subject: 'Recuperação de Senha',
-            // Aponta para o arquivo Pug (sem .pug) na pasta "src/templates"
             template: './forget',
-            // As variáveis que o template usará
             context: {
                 token: resetToken,
                 userName: user.name,
-                // qualquer outro campo que queira exibir no template
             },
         });
         return { message: 'E-mail de recuperação enviado!' };

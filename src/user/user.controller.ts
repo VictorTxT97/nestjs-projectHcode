@@ -2,8 +2,7 @@ import {
   Controller,
   Post,
   Body,
-  Get,
-  Param,
+  Get, 
   Put,
   Patch,
   Delete,
@@ -18,12 +17,13 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdatePatchUserDTO } from './dto/update-patch-user.dto';
-import { ParamId } from 'src/decorators/param-is.decorator';
-import { Roles } from 'src/decorators/roles.decorator';
-import { Role } from 'src/enums/role.enums';
-import { LogInterceptor } from 'src/interceptors/log.interceptor';
-import { RolesGuard } from 'src/guards/role.guard';
-import { AuthGuard } from 'src/guards/auth.guard';
+import { Roles } from '../decorators/roles.decorator';
+import { Role } from '../enums/role.enums';
+import { AuthGuard } from '../guards/auth.guard';
+import { RolesGuard } from '../guards/role.guard';
+import { LogInterceptor } from '../interceptors/log.interceptor';
+import { ParamId } from '../decorators/param-is.decorator';
+
 @Roles(Role.ADMIN)
 @UseGuards( AuthGuard, RolesGuard)
 @UseInterceptors(LogInterceptor)

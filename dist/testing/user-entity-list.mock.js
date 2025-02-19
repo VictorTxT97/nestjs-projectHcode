@@ -3,12 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.userEntityList = void 0;
 const role_enums_1 = require("../enums/role.enums");
 exports.userEntityList = [{
-        name: "xand aviao",
-        email: "xand@example.com",
-        password: "$2b$10$OkKG2Di5WKyLPOqV/9dYy.qm358AfxSX4IiarO6ciMtDcXL3e3kTK",
-        birthAt: new Date('1997-07-18'),
-        id: 17,
-        role: role_enums_1.Role.ADMIN,
+        name: "rodrigo alvarenGA",
+        email: "RODRIGO.allen@example.com",
+        password: "$2b$10$vjPcar4tgrGd20euC5KRvu.ftbrWYUc5J8mVc0uCp/lI6YcCr6SXO",
+        birthAt: new Date('1990-07-14'),
+        id: 12,
+        role: role_enums_1.Role.USER,
         createdAt: new Date(),
         updatedAt: new Date()
     }, {

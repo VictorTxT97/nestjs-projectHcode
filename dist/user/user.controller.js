@@ -17,12 +17,12 @@ const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
 const create_user_dto_1 = require("./dto/create-user.dto");
 const update_patch_user_dto_1 = require("./dto/update-patch-user.dto");
-const param_is_decorator_1 = require("../decorators/param-is.decorator");
 const roles_decorator_1 = require("../decorators/roles.decorator");
 const role_enums_1 = require("../enums/role.enums");
-const log_interceptor_1 = require("../interceptors/log.interceptor");
-const role_guard_1 = require("../guards/role.guard");
 const auth_guard_1 = require("../guards/auth.guard");
+const role_guard_1 = require("../guards/role.guard");
+const log_interceptor_1 = require("../interceptors/log.interceptor");
+const param_is_decorator_1 = require("../decorators/param-is.decorator");
 let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
