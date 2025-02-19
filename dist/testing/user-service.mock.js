@@ -2,31 +2,33 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userServiceMock = void 0;
 const user_service_1 = require("../user/user.service");
-const role_enums_1 = require("../enums/role.enums");
-const user_entity_list_mock_1 = require("./user-entity-list.mock");
 exports.userServiceMock = {
     provide: user_service_1.UserService,
     useValue: {
-        show: jest.fn().mockResolvedValue(user_entity_list_mock_1.userEntityList[0]),
-        create: jest.fn().mockResolvedValue(user_entity_list_mock_1.userEntityList[0]),
-        list: jest.fn().mockResolvedValue(user_entity_list_mock_1.userEntityList),
-        update: jest.fn().mockResolvedValue(user_entity_list_mock_1.userEntityList[0]),
-        updatePartial: jest.fn().mockResolvedValue(user_entity_list_mock_1.userEntityList[0]),
-        delete: jest.fn().mockResolvedValue(true),
-        exists: jest.fn().mockResolvedValue(true),
+        list: jest.fn().mockResolvedValue([
+            { id: 1, email: "test@example.com", name: "Test User", role: "USER" },
+        ]), // ✅ Corrigido: list() agora retorna um array
+        show: jest.fn().mockResolvedValue({
+            id: 1, email: "test@example.com", name: "Test User", role: "USER",
+        }), // ✅ Corrigido: show() agora retorna um usuário válido
+        create: jest.fn().mockResolvedValue({
+            id: 1, email: "test@example.com", name: "Test User", password: "123456",
+        }), // ✅ Corrigido: create() agora retorna um usuário
+        update: jest.fn().mockResolvedValue({
+            id: 1, email: "updated@example.com", name: "Updated User",
+        }), // ✅ Corrigido: update() agora retorna o usuário atualizado
+        updatePartial: jest.fn().mockResolvedValue({
+            id: 1, email: "partial@example.com", name: "Partial Updated User",
+        }), // ✅ Corrigido: updatePartial() agora está presente
+        delete: jest.fn().mockResolvedValue(true), // ✅ Corrigido: delete() agora está presente
         findOne: jest.fn().mockImplementation(({ where }) => {
-            // Se o e-mail for novo, retorna undefined
-            if (where?.email) {
-                return Promise.resolve(undefined);
+            // Simulação de busca por e-mail
+            if (where?.email === "test@example.com") {
+                return Promise.resolve({
+                    id: 1, email: "test@example.com", password: "hashedpassword",
+                });
             }
-            return Promise.resolve({
-                id: 22,
-                email: 'janira@gmail.com',
-                password: '$2b$10$hashedpassword',
-                role: role_enums_1.Role.USER,
-            });
+            return Promise.resolve(undefined);
         }),
-        save: jest.fn().mockImplementation((user) => Promise.resolve({ ...user, id: Date.now() }) // ✅ Simula um usuário salvo com ID único
-        ),
     },
 };

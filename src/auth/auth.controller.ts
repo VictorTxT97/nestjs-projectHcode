@@ -7,9 +7,6 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
-  UploadedFiles,
-  ParseFilePipe,
-  FileTypeValidator,
   Req
 } from '@nestjs/common';
 

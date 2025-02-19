@@ -119,7 +119,7 @@ let AuthService = class AuthService {
      * Registra um novo usuário
      */
     async register(body) {
-        const userExists = await this.usersRepository.findOne({ where: { email: body.email } });
+        const userExists = await this.userService.findOne({ where: { email: body.email } });
         console.log("🚀 Valor retornado por findOne no register:", userExists); // 🔥 Adicionado para depuração
         if (userExists) {
             throw new common_1.BadRequestException('E-mail já cadastrado');
